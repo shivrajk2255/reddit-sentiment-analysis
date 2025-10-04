@@ -32,14 +32,12 @@ LOGGER = setup_logger()
 
 # --- Config from Environment ---
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER", "kafka:9092")
-KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC", "reddit_comments_raw")
+KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC", "reddit_posts")
 
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET")
-REDDIT_USER_AGENT = os.environ.get(
-    "REDDIT_USER_AGENT", "CommentStreamIngestion_v3.0 (by u/DataEngineerBot)"
-)
-SUBREDDITS = os.environ.get("SUBREDDITS", "all")
+REDDIT_USER_AGENT = os.environ.get("REDDIT_USER_AGENT")
+SUBREDDITS = os.environ.get("SUBREDDITS")
 PRAW_RATELIMIT_SECONDS = int(os.environ.get("PRAW_RATELIMIT_SECONDS", 360))
 
 # --- Credential validation ---
