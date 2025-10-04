@@ -3,7 +3,7 @@ version: '3.7'
 services:
   # 1. CONFLUENT KAFKA (KRaft mode, no ZooKeeper)
   kafka:
-    image: confluentinc/cp-kafka:7.6.0
+    image: confluentinc/cp-kafka:8.8.1
     container_name: kafka
     ports:
       - "9092:9092"  # Kafka client connections
