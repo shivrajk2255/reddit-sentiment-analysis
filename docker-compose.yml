@@ -1,31 +1,24 @@
 version: '3.7'
 
 services:
-  # 1. KAFKA INFRASTRUCTURE
-  zookeeper:
-    image: bitnami/zookeeper:latest
-    ports:
-      - "2181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    volumes:
-      - zookeeper_data:/bitnami/zookeeper
-    networks:
-      - data-network
-
+  # 1. CONFLUENT KAFKA (KRaft mode, no ZooKeeper)
   kafka:
-    image: bitnami/kafka:latest
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
     ports:
-      - "9092:9092"
+      - "9092:9092"  # Kafka client connections
+      - "9093:9093"  # Kafka controller port (internal)
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-    depends_on:
-      - zookeeper
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
-      - kafka_data:/bitnami/kafka
+      - kafka_data:/var/lib/kafka/data
     networks:
       - data-network
 
@@ -59,7 +52,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      - /var/run/docker.sock:/var/run/docker.sock  # Needed for SparkSubmitOperator
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - data-network
 
@@ -86,8 +79,8 @@ services:
     image: bitnami/spark:3.5.0
     command: /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.master.Master
     ports:
-      - "8081:8080"   # Spark Web UI
-      - "7077:7077"   # Spark Master Port
+      - "8081:8080"
+      - "7077:7077"
     environment:
       - SPARK_MODE=master
       - SPARK_RPC_AUTHENTICATION_ENABLED=false
@@ -111,7 +104,7 @@ services:
 
   # 4. REDDIT PRODUCER
   reddit-producer:
-    build: ./reddit-producer   # <-- folder containing Dockerfile & producer.py
+    build: ./reddit-producer
     depends_on:
       - kafka
     env_file:
@@ -121,11 +114,10 @@ services:
 
 # Volume Definitions (Persistence)
 volumes:
-  zookeeper_data:
   kafka_data:
   airflow_db_data:
 
-# Network Definition (Shared internal bridge)
+# Network Definition
 networks:
   data-network:
     driver: bridge
